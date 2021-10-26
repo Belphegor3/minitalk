@@ -5,38 +5,56 @@
 #                                                     +:+ +:+         +:+      #
 #    By: lfchouch <lfchouch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2021/10/03 17:53:50 by lfchouch          #+#    #+#              #
-#    Updated: 2021/10/15 20:07:29 by lfchouch         ###   ########.fr        #
+#    Created: 2021/10/25 21:49:20 by lfchouch          #+#    #+#              #
+#    Updated: 2021/10/26 06:05:44 by lfchouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = minitalk.a
+NAME1 = server
 
-SRC =	server.c					\
-		client.c					\
-		main.c						\
+NAME2 = client
+
+SRC_S = server.c		\
+
+SRC_C = client.c		\
+
+OBJ_S = $(SRC_S.c=.o)
+
+OBJ_C = $(SRC_C.c=.o)
 
 OBJ = $(SRC:.c=.o)
 
 CC = gcc
 
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Werror -Wall -Wextra
 
-all : $(NAME)
+INCLUDE		= -I./include/
 
-INCDIR = includes
+PATH_PRINTF = ft_printf
 
-$(NAME) : $(OBJ)
+PRINTF = libftprintf.a
 
-%.o: %.c
-				$(CC) $(CFLAGS) -I./$(INCDIR) -c $< -o $@
+%.o :		%.c
+	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCLUDE)
+
+all : $(NAME1) $(NAME2)
+
+$(NAME1) : $(OBJ) $(OBJ_S)
+	make -C $(PATH_PRINTF)
+	cp $(PATH_PRINTF)/$(PRINTF) $(NAME1)
+	$(CC) $(SRC_S) -o $(NAME1) $(OBJ) $(OBJ_S) $(PATH_PRINTF)/$(PRINTF)
+
+$(NAME2) : $(OBJ) $(OBJ_C)
+	cp $(PATH_PRINTF)/$(PRINTF) $(NAME2)
+	$(CC) $(SRC_C) -o $(NAME2) $(OBJ) $(OBJ_C) $(PATH_PRINTF)/$(PRINTF)
 
 clean :
-				rm -rf $(OBJ)
+	rm -rf $(OBJ_S) $(OBJ_C) $(OBJ)
+	make clean -C $(PATH_PRINTF)
 
-fclean : clean
-				rm -rf $(NAME)
+fclean :	clean
+	rm -rf $(NAME1) $(NAME2)
 
-re : fclean all
+re :		fclean all
 
-.PHONY : fclean clean all re
+.Phony :	all re clean fclean

@@ -6,142 +6,68 @@
 /*   By: lfchouch <lfchouch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/01 21:05:02 by lfchouch          #+#    #+#             */
-/*   Updated: 2021/10/20 22:23:42 by lfchouch         ###   ########.fr       */
+/*   Updated: 2021/10/26 05:59:02 by lfchouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minitalk.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
+#include <signal.h>
 #include <unistd.h>
-#include <string.h>
+#include <stdio.h>
+#include "ft_printf/ft_printf.h"
 
-static int	server_pid;
-
-void	ft_putchar(char c)
-{
-	write(1, &c, 1);
-}
-
-void	ft_putstr(const char *str)
+char	ft_convert_bin_to_char(char *display)
 {
 	int	i;
+	int	res;
 
 	i = 0;
-	while (str[i] != '\0')
-	{
-		ft_putchar(str[i]);
-		i++;
-	}
+	res = 0;
+	if (display[7] == '1')
+		res += 1;
+	if (display[6] == '1')
+		res += 2;
+	if (display[5] == '1')
+		res += 4;
+	if (display[4] == '1')
+		res += 8;
+	if (display[3] == '1')
+		res += 16;
+	if (display[2] == '1')
+		res += 32;
+	if (display[1] == '1')
+		res += 64;
+	if (display[0] == '1')
+		res += 128;
+	return (res);
 }
 
-/*void	handle_sigint()
+void	handle_message_display(int sigusr)
 {
-	static int	i;
+	static char	display[8];
+	static int	nb_bit = 1;
+	static int	i = 0;
+	static char	buf[10001];
+	static int	j = 0;
 
-	if (i < 2)
-		printf("non non non trou du cul tu peux pas faire ca 💩 (essaye crtl + z)\n");
-	else if (i == 4)
-		printf("eh oh frerot crtl z je te rappel");
-	else
-	{
-		printf("ATTEND...\nATTEND JTE DIS\n");
-		sleep(1);
-		printf("MAIS PUTAIN MAIS ARRETE DE SPAM TU VOIS BIEN QUE CA FONCTIONNE PAS!!!!!!\n");
-	}
+	if (sigusr == SIGUSR1)
+		display[i] = '1';
+	if (sigusr == SIGUSR2)
+		display[i] = '0';
 	i++;
-}
-
-void	handle_sigtstp()
-{
-	static int	i;
-
-	if (i == 0)
-		printf("le pire c'est que t'y as cru trou du cul 😈\n");
-	else if (i == 1)
-		printf("Sois pas con ca fonctionnera pas...\n");
-	else if (i == 8)
-		printf("T'es un acharné toi.......\n");
-	else
-		printf("Arrete de te faire du mal pour rien.......\n");
-	i++;
-}*/
-
-void	handle_sigsegv()
-{
-	kill(0, 19);
-}
-int	ft_strlen(char *str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i] != '\0')
-		i++;
-	return (i);
-}
-
-char	*ft_strjoin_display(char *display, char next_char)
-{
-	char	*joined;
-	int		i;
-
-	joined = malloc(ft_strlen(display) + 2);
-	if (joined == NULL)
-		return (NULL);
-	i = 0;
-	while (display[i] != '\0' && display)
+	if (nb_bit % 8 == 0)
 	{
-		joined[i] = display[i];
-		i++;
-	}
-	joined[i] = next_char;
-	if (next_char != '\0' && next_char)
-		joined[i + 1] = '\0';
-	else
-		joined[i] = '\0';
-	return (joined);
-}
-
-char	*message_display(char *display, char next_char)
-{
-	display = ft_strjoin_display(display, next_char);
-	if (!next_char)
-	{
-		ft_putstr(display);
-		ft_putchar('\n');
-		if (display)
-		{
-			free(display);
-			display = NULL;
-		}
-	}
-	return (display);
-}
-
-void	handle_message_display(int bin)
-{
-	static char	*final_display;
-	static int	i;
-	static char	next_final_display_char;
-
-	next_final_display_char &= (bin << i++);
-	if (i == 7)
-	{
-		final_display = message_display(final_display, next_final_display_char);
+		buf[j++] = ft_convert_bin_to_char(display);
+		i = -1;
+		while (++i < 8)
+			if (display[i] != '0')
+				break ;
+		if (i == 8)
+			ft_printf("%s\n", buf);
+		if (i == 8)
+			j = 0;
 		i = 0;
-		next_final_display_char = 0;
 	}
-}
-
-void	server_display(void)
-{
-	server_pid = getpid();
-	printf("\033[1;3;33m-----------------------------\033[0m\n");
-	printf("\033[1;3;33m-----------SERVEUR-----------\033[0m\n");
-	printf("\033[1;3;33m-----------------------------\033[0m\n");
-	printf("\e[1;33m-\e[0m\e[1;36m           %d\e[0m\e[1;33m           -\e[0m\n", server_pid);
+	nb_bit++;
 }
 
 int	main(int ac, char **av)
@@ -149,19 +75,18 @@ int	main(int ac, char **av)
 	(void)av;
 	if (ac != 1)
 	{
-		printf("\e[1;5;31mDon't put any argument\e[0m\n");
+		ft_printf("Don't put any argument\n");
 		return (0);
 	}
-	server_display();
-	//signal(SIGTSTP, &handle_sigtstp);
-	//signal(SIGINT, &handle_sigint);
-	signal(SIGSEGV, &handle_sigsegv);
+	ft_printf("-----------------------------\n");
+	ft_printf("-----------SERVEUR-----------\n");
+	ft_printf("-----------------------------\n");
+	ft_printf("-           ");
+	ft_printf("%d", getpid());
+	ft_printf("           -\n");
+	signal(SIGUSR1, handle_message_display);
+	signal(SIGUSR2, handle_message_display);
 	while (1)
-	{
-		signal(SIGUSR1, &handle_message_display);
-		signal(SIGUSR2, &handle_message_display);
 		pause();
-
-	}
-	return 0;
+	return (0);
 }
