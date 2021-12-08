@@ -10,19 +10,15 @@
 #                                                                              #
 # **************************************************************************** #
 
-NAME1 = server
-
-NAME2 = client
+NAME = server client
 
 SRC_S = server.c		\
 
 SRC_C = client.c		\
 
-OBJ_S = $(SRC_S.c=.o)
+OBJ_S = $(SRC_S:.c=.o)
 
-OBJ_C = $(SRC_C.c=.o)
-
-OBJ = $(SRC:.c=.o)
+OBJ_C = $(SRC_C:.c=.o)
 
 CC = gcc
 
@@ -34,27 +30,21 @@ PATH_PRINTF = ft_printf
 
 PRINTF = libftprintf.a
 
-%.o :		%.c
-	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCLUDE)
+all : $(NAME)
 
-all : $(NAME1) $(NAME2)
+$(NAME):  %: %.o ${PATH_PRINTF}/$(PRINTF)
+	$(CC) $(CFLAGS) -o $@ $^ 
 
-$(NAME1) : $(OBJ) $(OBJ_S)
-	make -C $(PATH_PRINTF)
-	cp $(PATH_PRINTF)/$(PRINTF) $(NAME1)
-	$(CC) $(SRC_S) -o $(NAME1) $(OBJ) $(OBJ_S) $(PATH_PRINTF)/$(PRINTF)
-
-$(NAME2) : $(OBJ) $(OBJ_C)
-	cp $(PATH_PRINTF)/$(PRINTF) $(NAME2)
-	$(CC) $(SRC_C) -o $(NAME2) $(OBJ) $(OBJ_C) $(PATH_PRINTF)/$(PRINTF)
+${PATH_PRINTF}/$(PRINTF) : 
+	make -C $(@D)
 
 clean :
-	rm -rf $(OBJ_S) $(OBJ_C) $(OBJ)
-	make clean -C $(PATH_PRINTF)
+	rm -rf $(OBJ_S) $(OBJ_C)
+	make fclean -C $(PATH_PRINTF)
 
 fclean :	clean
-	rm -rf $(NAME1) $(NAME2)
+	rm -rf $(NAME)
 
 re :		fclean all
 
-.Phony :	all re clean fclean
+.PHONY :	all re clean fclean

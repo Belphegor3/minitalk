@@ -13,7 +13,11 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "ft_printf/ft_printf.h"
+#ifndef BUFFER_SIZE
+# define BUFFER_SIZE 1000
+#endif
 
 char	ft_convert_bin_to_char(char *display)
 {
@@ -46,32 +50,35 @@ void	handle_message_display(int sigusr)
 	static char	display[8];
 	static int	nb_bit = 1;
 	static int	i = 0;
-	static char	buf[10001];
+	static char	buf[BUFFER_SIZE];
 	static int	j = 0;
 
-	if (sigusr == SIGUSR1)
-		display[i] = '1';
-	if (sigusr == SIGUSR2)
-		display[i] = '0';
-	i++;
+	display[i++] = '0' + (sigusr == SIGUSR1);
 	if (nb_bit % 8 == 0)
 	{
 		buf[j++] = ft_convert_bin_to_char(display);
 		i = -1;
-		while (++i < 8)
-			if (display[i] != '0')
-				break ;
+		while (++i < 8 && display[i] == '0')
+			;
 		if (i == 8)
 			ft_printf("%s\n", buf);
 		if (i == 8)
 			j = 0;
 		i = 0;
 	}
+	if (j == BUFFER_SIZE)
+	{
+		write(1, buf, BUFFER_SIZE);
+		j = j - BUFFER_SIZE;
+	}
 	nb_bit++;
 }
 
 int	main(int ac, char **av)
 {
+	int	server_pid;
+
+	server_pid = getpid();
 	(void)av;
 	if (ac != 1)
 	{
@@ -82,7 +89,7 @@ int	main(int ac, char **av)
 	ft_printf("-----------SERVEUR-----------\n");
 	ft_printf("-----------------------------\n");
 	ft_printf("-           ");
-	ft_printf("%d", getpid());
+	ft_printf("%d", server_pid);
 	ft_printf("           -\n");
 	signal(SIGUSR1, handle_message_display);
 	signal(SIGUSR2, handle_message_display);

@@ -83,7 +83,7 @@ int	ft_atoi(const char *nptr)
 	neg = 1;
 	num = 0;
 	while (nptr[i] == ' ' || nptr[i] == '\n' || nptr[i] == '\t'
-		  || nptr[i] == '\v' || nptr[i] == '\f' || nptr[i] == '\r')
+		|| nptr[i] == '\v' || nptr[i] == '\f' || nptr[i] == '\r')
 		i++;
 	if (nptr[i] == '-' || nptr[i] == '+')
 	{
@@ -105,21 +105,26 @@ int	main(int ac, char **av)
 	{
 		write(1, "./client takes server PID and the message", 42);
 		write(1, " that you want to send as parameters\n", 37);
-		exit(1);
+		return (EXIT_FAILURE);
+	}
+	if (ac == 3 && ft_atoi(av[1]) <= 0)
+	{
+		write(1, "Wrong PID\n", 10);
+		return (EXIT_FAILURE);
 	}
 	if (ac == 3 && ft_isnum(av[1]) == IS_NOT_NUM)
 	{
 		if (av[1][0] == '+')
 		{
-			write(1, "Don't put '+' on your PID, would you", 37);
-			write(1, " write \"+2\" instead of \"2\"? No I don't think so!\n", 50);
+			write(1, "Don't put '+' on your PID, would \
+				you write \"+2\" instead of \"2\"? No I don't think so!\n", 87);
 		}
 		else if (av[1][0] == '-')
 			write(1, "PID isn't negative!\n", 20);
 		else
 			write(1, "PID is an integer!\n", 19);
-		exit(2);
+		return (EXIT_FAILURE);
 	}
 	client_display(av[2], ft_atoi(av[1]), -1, -1);
-	return (0);
+	return (EXIT_SUCCESS);
 }
